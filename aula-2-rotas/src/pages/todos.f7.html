@@ -1,0 +1,238 @@
+<template>
+
+        <div class="page">
+            <div class="navbar">
+                <div class="navbar-bg"></div>
+                <div class="navbar-inner">
+                    <div class="left">
+                        <a href="" class="link back">
+                            <i class="icon-back"></i>
+                        </a>
+                    </div>
+                    <div class="title">
+                        Meus to dos
+                    </div>
+                    <div class="right">
+                        <b>{{qtdeConcluidos}}/{{tarefas}}</b>
+                    </div>
+                </div>
+            </div>
+            <div class="page-content">
+                <div class="fab fab-right-bottom color-red">
+                    <button @click="apagarFeitos" class="button button-fill color-red">
+                        Apagar concluídas
+                    </button>
+                </div>
+                
+                <div class="list">
+                    <ul>
+                        <li class="item-content item-input">
+                            <div class="item-inner">
+                                <div class="item-title item-floating-label">
+                                    Novo todo
+                                </div>
+                                <div class="item-input-wrap">   
+                                    <input type="text" name="todo" />
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="block">
+                    <button @click="salvarTodo" class="button button-outline color-green">Salvar todo</button>
+                </div>
+                <div class="list">
+                    <ul id="lista">
+                        {{#todos}}
+                            <div class="row align-items-center" data-key="{{id}}">
+                                <div class="col-80">
+                                    <li @click="toggleToDo" data-key="{{id}}">
+                                            <label class="item-content item-checkbox"> 
+                                                <input type="checkbox" class="ignore"/>
+                                                <i class="icon icon-checkbox"></i>
+                                                <div class="item-inner">
+                                                    <div class="item-title {{#if feito}} riscado {{/if}}">
+                                                        {{tarefa}}
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </li>                    
+                                </div>
+                                <div class="col-20">
+                                    <a class="link icon-only" @click="abrirAction">
+                                        <i class="f7-icons">ellipsis_vertical</i>
+                                    </a>
+                                </div>
+                            </div>
+                        {{/todos}}
+                    </ul>
+                </div>
+    
+            </div>
+        </div>
+    </template>
+    
+    
+    <script>
+        // Ao clicar no to do, risque o item selecionado 
+    
+        // Exporte o componente criado para as rotas
+        export default {
+            methods: {
+                toggleToDo: function (event) {
+                    // $$ : atributo usado para utilizar funções de manipulação da página HTML
+                    // Recuperar componente atual e acessar o objeto todos
+                    const component = this; 
+                    const { todos, $$ } = component;
+                    const { target } = event; 
+    
+                    const $target = $$(target);
+    
+                    if(!$target.hasClass('ignore')){
+                        // A variável vai ser igual ao que a função retornar
+                        const $li = ($target) => {
+                            // Se onde o mouse clicou for o li, retorne ele. Caso contrário, 
+                            if($target.prop('tagName') === 'li'){
+                                return $target;
+                            }
+                            // Caçar tag pai <li> no elemento selecionado
+                            return $target.parents('li');
+                        };
+                        
+                        const idToDoClicado = parseInt($li($target).data('key'));
+                        
+                        // Similar a: $('').data()
+                        
+                        // Ao clicar:
+                        // 1) Verifique se o item clicado se encontra no objeto percorrido pelo map
+                        // 2) Inverta o estado "Feito" do item clicado (se tiver false, vai para true)
+                        
+                        const todosAtualizados = todos.map(function(todo){
+                            if(todo.id === idToDoClicado){
+                                todo.feito = !todo.feito
+                            }
+                            return todo;
+                        })
+                        
+                        // Numeração de Tarefas concluídas 
+                        var totalConcluidos = 0;
+    
+                        todosAtualizados.forEach(function(todo){
+                            if(todo.feito == true){
+                                totalConcluidos++;
+                            }
+                        });
+    
+                        // Filtrar todos concluídos
+                        var concluidos = todosAtualizados.filter(function(todo){
+                            if(todo.feito == true){
+                                return true;
+                            }
+                        });
+    
+                        // Atualizar o contexto após mudar os valores
+                        component.$setState({
+                            todos:  todosAtualizados,
+                            qtdeConcluidos: totalConcluidos,
+                            concluidos: concluidos
+                        });   
+                    }
+                },
+                apagarFeitos:function(){
+                    const component = this;
+                    const { $$ } = component;
+                    const { $app : app } = component;
+                    const { concluidos : todosConcluidos } = component;
+                    // Percorrer lista e procurar os elementos <li>
+                    const lista = $$('#lista').find('li');
+                    // Para idenficar a classe "riscado", identifique os títulos de cada item
+                    const titulos = $$(lista).find('.item-title');
+                    var apagados = 0;
+    
+                    titulos.each(function(index, titulo){
+                        if($$(titulo).hasClass('riscado')){
+                            // Remova todos os ancestrais da div que apresenta o título que foi conclúido
+                            $$(titulo).parents('#lista .row').remove();
+                            apagados++;
+                        }
+                    })
+    
+                    // Verificar se o usuário riscou algum todo
+                    if(apagados > 0){
+                        app.dialog.alert('Itens apagados!');
+                    }
+                    else{
+                        app.dialog.alert('Você não concluiu nenhum to do!');
+                    }
+                
+                },
+                salvarTodo:function(event){
+                    const component = this;
+                    const { $app : app } = component;
+                    const { $$, todos, tarefas } = component;
+                    // Capturar valor do input e colocar na lista
+                    const $input = $$("input[name='todo']");
+                    const inputValue = $input.val();
+                    // .trim() apaga os espaços em branco
+                    if(inputValue.trim().length == 0){  
+                        app.dialog.alert('Você não escreveu nenhum todo');
+                    }
+                    else{
+                        const novoTodo = {
+                            id:todos.length + 1,
+                            tarefa: inputValue,
+                            feito:false
+                        }
+                        
+                        component.$setState({
+                            tarefas: tarefas + 1,
+                            todos: [
+                                // Usou-se os três pontos para que ele espalha-se os itens e não coloca-se o array já presente em data
+                                ... todos, 
+                                novoTodo
+                            ]
+                        });
+                        // Esvaziar input
+                        $input.val('');
+                    }
+                },
+                abrirAction: function(event){
+                    const component = this;
+                    const { $app, excluirTodo, $$ } = component;
+                    const $target = $$(event.target);
+                    const $row = $target.parents('.row');
+                    const id = $row.data('key');
+                    const action = $app.actions.create({
+                        buttons:[
+                            { text : 'Excluir todo', onClick : function(){ excluirTodo(id); }},
+                            { text : 'Voltar', color : 'red' }
+                        ]
+                    });
+                    action.open();
+                },
+                excluirTodo:function(id){
+                    const component = this;
+                    const { todos } = component;
+                    const todosAtualizados = todos.filter(function(todo){
+                        // Se encontrou o elemento, retorne ele (na sintaxe do filter, sempre que retornar true ele vai retornar o parâmetro testado. Nesse caso o "todo")
+                        if(todo.id === parseInt(id)){
+                            return false
+                        }
+                        return true;
+                    });
+                    component.$setState({
+                        todos: todosAtualizados
+                    })
+                }
+            },
+            data: function () {
+                return {
+                    todos: [],
+                    tarefas: 0,
+                    qtdeConcluidos: 0,
+                    concluidos:[]
+                }
+            }
+        }
+    
+    </script>

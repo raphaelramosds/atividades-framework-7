@@ -1,0 +1,80 @@
+<template>
+  <div class="page" data-name="home">
+    <div class="navbar">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner">
+        <div class="left">
+          <a href="" class="link back">
+            <i class="icon-back"></i>
+          </a>
+        </div>
+        <div class="title"> 
+          Meus repositórios
+        </div>
+        <div class="right">
+
+        </div>
+      </div>
+    </div>
+    <!-- Scrollable page content-->
+    <div class="page-content">
+      <!-- Se existir repositórios advindos de uma requisição, faça -->
+
+      {{#if repos}}
+        <div class="list simple-list">
+          <ul>
+            {{#repos}}
+              <li>{{name}}</li>
+
+            {{/repos}}
+          </ul>
+        </div>
+      {{/if}}
+
+    </div>
+  </div>
+
+</template>
+
+<script>
+  // Exporte o componente criado para as rotas
+  export default {
+    data:function(){
+      return{
+        // Antes da requisição
+        repos:[
+          {name:'Antes da requisição'},
+          {name:'Antes da requisição'},
+          {name:'Antes da requisição'},
+          {name:'Antes da requisição'}
+        ]
+      }
+    },
+    on:{
+        pageInit:function(){
+          const component = this;
+          const {$app : app} = component;
+          app.dialog.alert('A página abriu');
+
+          // Abrir requisições
+          app.request.promise({
+            timeout:5000,
+            url:'https://api.github.com/users/raphaelramosds/repos',
+            method:'GET',
+            dataType:'json' // Que tipo de informação você deseja receber?
+          })
+            .then(response => {
+              console.log(response);
+              // Atualizar o contexto do componente  colocando os dados recebidos da requisição nele
+              component.$setState({
+                // O atributo data da Response guarda todos os dados do usuário
+                repos:response.data
+              })
+
+            })
+            .catch(error => console.log(error))
+
+        }
+      }
+  }
+</script>

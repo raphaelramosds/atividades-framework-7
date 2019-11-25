@@ -1,0 +1,85 @@
+<template>
+    <div class="page">
+        <div class="page-content">
+            <p class="
+                {{#if status.ocioso}}
+                    text-color-green
+                {{else}}
+                    text-color-red
+                {{/if}}">{{ status.mensagem }}</p>
+        </div>
+    </div>
+
+</template>
+
+<script>
+    export default { 
+        data:function(){
+            return {
+                token:null,
+                api:{
+                    baseURL: 'https://suap.ifrn.edu.br/api/v2/',
+                    autenticacaoURL: 'autenticacao/acesso_responsaveis/',
+                    boletimURL: 'minhas-informacoes/boletim/2019/1',
+                    chaveDeAcesso:'71200',
+                    matricula:'20161041110016'
+                },
+                status: {
+                    mensagem: 'Ocioso',
+                    ocioso: false
+                }
+            }
+        },
+        on:{
+            pageInit: function(){
+                const component = this;
+                const { 
+                    $app, 
+                    api:{
+                        baseURL, 
+                        autenticacaoURL, 
+                        matricula, 
+                        chaveDeAcesso 
+                    }
+                } = component;
+                
+                component.$setState({
+                    status:{
+                        ocioso:false,
+                        mensagem:'Requisitanto token'
+                    }
+                });
+                // Promise = promessa (fazer um request para o servidor e esperar seu retorno)
+                $app.request.promise({
+                    url: baseURL + autenticacaoURL,
+                    method: 'POST',
+                    timeOut: 15000, // Se passarem 15s e não retornar nada, trate como error ( 15000ms = 15 )
+                    dataType: 'json',
+                    data:{
+                        matricula: matricula,
+                        chave: chaveDeAcesso
+                    }
+                })
+                    .then(function(response){
+                        component.$setState({
+                            status:{
+                                ocioso:true,
+                                mensagem:'Token recebido: ' + response.data.token
+                            }
+                        });
+                        console.log(response);
+                    })
+                    .catch(function(error){
+                        component.$setState({
+                            status:{
+                                ocioso:false,
+                                mensagem:'Falha no recebimento do token'
+                            }
+                        });
+                    })
+
+            }
+        }
+     }
+
+</script>

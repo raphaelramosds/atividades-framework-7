@@ -1,0 +1,184 @@
+<template>
+  <div class="page">
+    <div class="navbar">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner">
+        <div class="left">
+          <a class="link back">
+            <i class="icon-back"></i>
+          </a>
+        </div>
+        <div class="title">Meus dados</div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="block">
+        <p>
+          <div class="row">
+            <div class="col-15">
+
+              {{#if status.ocioso}}              
+                <div class="preloader color-blue"></div>
+              {{else}}
+                <i class="icon-next text-color-green"></i>
+              {{/if}}
+
+            </div>
+            <div class="col-85">
+              {{ status.mensagem }}
+            </div>
+          </div>
+        </p>
+        <p>Meu token: {{ token }}</p>        
+
+        <button class="button button-fill" @click="meusDados">Carregar meus dados</button>
+      </div>
+  
+
+      <div class="data-table">
+        <table>
+          <thead>
+            <tr>
+              <th class="label-cell">Matricula</th>
+              <td>
+                {{#meusDadosSUAP}}
+                  {{matricula}}
+                {{/meusDadosSUAP}}
+              </td>
+            </tr>
+            <tr>  
+              <th class="label-cell">Nome Usual</th>
+              <td>
+                {{#meusDadosSUAP}}
+                  {{nome_usual}}
+                {{/meusDadosSUAP}}
+              </td>
+            </tr>
+            <tr>  
+              <th class="label-cell">Vínculo</th>
+              <td>
+                {{#meusDadosSUAP}}
+                  {{tipo_vinculo}}
+                {{/meusDadosSUAP}}
+              </td>
+            </tr>
+            <tr>  
+              <th class="label-cell">Curso</th>
+              <td>
+                {{#meusDadosSUAP}}
+                  {{vinculo.curso}}
+                {{/meusDadosSUAP}}
+              </td>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</template>
+
+<script>
+  export default {
+    methods:{
+      meusDados: function () {
+        const component = this;
+        const { 
+          $app,
+          token,
+          api : {
+            baseURL,
+            meusDadosURL
+          }
+        } = component;
+
+        $app.request.promise({
+            url: baseURL + meusDadosURL,
+            timeout: 15000,
+            method: 'GET',
+            dataType: 'json',
+            headers: {
+              Authorization: "JWT " + token
+            }
+        })
+          .then(function(response){
+            console.log(response);
+            component.$setState({
+              meusDadosSUAP: response.data
+            });
+          })
+          .catch(function(error){
+            console.log(error.message);
+          })
+      }
+    },
+    data: function () {
+      return {
+        token: null,
+        meusDadosSUAP: null,
+        api: {
+          baseURL: 'https://suap.ifrn.edu.br/api/v2/',
+          autenticacaoURL: 'autenticacao/acesso_responsaveis/',
+          meusDadosURL: 'minhas-informacoes/meus-dados/',
+          chaveDeAcesso: '71200',
+          matricula: '20161041110016'
+        },
+        status: {
+          mensagem: 'Ocioso',
+          ocioso: true
+        }
+      }
+    },
+    on: {
+      pageInit: function () {
+        console.log('page init');
+        const component = this;
+        const {
+          $app,
+          token,
+          api: {
+            baseURL,
+            autenticacaoURL,
+            matricula,
+            chaveDeAcesso
+          }
+        } = component;
+
+        component.$setState({
+          status: {
+            ocioso: true,
+            mensagem: 'Requisitando token'
+          }
+        });
+
+        $app.request.promise({
+          url: baseURL + autenticacaoURL,
+          method: 'POST',
+          timeout: 15000,
+          dataType: 'json',
+          data: {
+            matricula: matricula,
+            chave: chaveDeAcesso
+          }
+        })
+          .then(function (response) { 
+            component.$setState({
+              status: {
+                ocioso: false,
+                mensagem: 'Token recebido com sucesso. Agora você pode acessar seus dados.'
+              },
+              token:response.data.token
+            })
+          })
+          .catch(function (error) { 
+              component.$setState({
+                status: {
+                  ocioso: false,
+                  mensagem: 'A API retornou o seguinte erro: ' + error.message
+                }
+              })
+           })
+      }
+    }
+  }
+</script>

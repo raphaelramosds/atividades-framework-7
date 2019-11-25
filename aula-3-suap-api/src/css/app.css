@@ -1,0 +1,16 @@
+/* Custom color theme properties */
+:root {
+  --f7-theme-color: #182f58;
+  --f7-theme-color-rgb: 24, 47, 88;
+  --f7-theme-color-shade: #0f1e38;
+  --f7-theme-color-tint: #214078;
+}
+
+/* Your app custom styles here */
+.riscado{
+  text-decoration: line-through;
+}
+
+.row i{
+  font-size: 23px;
+}
