@@ -1,0 +1,79 @@
+<template>
+    <div class="page" data-name="home">
+        <h2>{{nome}}</h2>
+        <button class="button button-fill color-red">
+            <!-- Entrar no escopo aluno e acessar os atributos a partir dele -->
+            {{#aluno}}
+                {{nome}} da escola {{escola}}
+            {{/aluno}}
+        </button>
+
+        <!-- Percorrendo lista e exibindo botões-->
+        {{#alunos}}
+            <a @click='abrirAlert' class="button button-fill-ios color-blue button-raised margin-bottom link external" href="https://wa.me/{{zap}}">
+                {{nome}}
+            </a>
+        {{/alunos}}
+    </div>
+</template>
+<script>
+// Exportar o componente e chamar a instância "data" da sua classe
+export default {
+    data:function(){
+        return {
+            nome:'Administrador',
+            aluno:{
+                nome:'Raphael',
+                idade:18,
+                escola:'IFRN'
+            },
+            // Criar arrray
+            alunos:[
+                { nome:'Isaac', idade:21, zap:''},
+                { nome:'Raphael', idade:18, zap:'5584986314164'},
+                { nome:'Evelyn', idade:19, zap:''}
+            ]
+        }
+    },
+    methods:{
+        abrirAlert:function(event){
+            // Impedir que ele vá apra o whatsapp
+            event.preventDefault();
+            // Alvo (target) do evento ou botão clicado
+            const { target } = event; // ou const target = event.target
+            //console.log(target);
+            
+            // Chamar href do alvo selecionado
+            const { href } = target; // ou const href = target.href
+            //console.log(href);
+
+            /* chamar o href poder ser chamado resumidamente asssim: 
+                const { target : { href } } = event
+            */
+
+            const component = this;
+            // app é uma instância da classe Framework7 que possui todos os métodos para acessar os componentes
+            const {$app : app} = component; // ou const app = component.$app;
+            
+            // Exibir os métodos do $app
+            //console.log(app);
+
+            const alertZap = app.dialog.create({
+                title:'Atenção!',
+                text:'Você deseja realmente abrir o zap?',
+                buttons:[
+                    {
+                        text:'Sim',
+                        onClick:function(){
+                            window.location = href;
+                        }
+                    },
+                    {text:'Não'}
+                ]
+            });
+
+            alertZap.open();
+        }
+    }
+}
+</script>
